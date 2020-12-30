@@ -1,0 +1,124 @@
+version: "3.8"
+
+services:
+
+  # https://hub.docker.com/_/mongo/
+  mongo:
+    image: mongo:4.2.8
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: mongoadmin
+    command: --wiredTigerCacheSizeGB 1.5
+    networks:
+      - streaming_environment
+
+  postgres-debezium:
+    build: docker/images/postgresql-96-debezium/
+    container_name: postgres_debezium
+    restart: unless-stopped
+    ports:
+      - 6543:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    command: postgres -c encrypt.key='4d488Ec9Dee0410371B7673B00Edb643'
+    networks:
+      - streaming_environment
+
+  kafka:
+    image: debezium/kafka:1.3
+    container_name: kafka
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+    environment:
+      - ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - streaming_environment
+
+  zookeeper:
+    image: debezium/zookeeper:1.3
+    container_name: zookeeper
+    ports:
+      - 2181:2181
+      - 2888:2888
+      - 3888:3888
+    networks:
+      - streaming_environment
+
+  kafka-connect:
+    build: docker/images/kafka-connect/
+    container_name: kafka_connect
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - zookeeper
+    links:
+      - zookeeper:zookeeper
+      - kafka:kafka
+    ports:
+      - 8083:8083
+    environment:
+      - GROUP_ID=1
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - CONFIG_STORAGE_TOPIC=example_connect_configs
+      - OFFSET_STORAGE_TOPIC=example_connect_offsets
+      - STATUS_STORAGE_TOPIC=example_connect_statuses
+    networks:
+      - streaming_environment
+
+  kafka-connect-ui:
+    image: landoop/kafka-connect-ui
+    container_name: kafka_connect_ui
+    restart: unless-stopped
+    ports:
+      - 8003:8000
+    environment:
+      CONNECT_URL: "http://kafka_connect:8083"
+    networks:
+      - streaming_environment
+    depends_on:
+      - kafka-connect
+
+  kafka-cmak:
+    image: vimagick/cmak
+    container_name: kafka_cmak
+    restart: unless-stopped
+    depends_on:
+      - zookeeper
+    ports:
+      - 2180:9000
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      KAFKA_MANAGER_USERNAME: admin
+      KAFKA_MANAGER_PASSWORD: admin
+      KAFKA_MANAGER_AUTH_ENABLED: "true"
+    networks:
+      - streaming_environment
+
+  kafka-kowl:
+    image: quay.io/cloudhut/kowl:master # verificar v1.1.0
+    container_name: kafka_kowl
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    entrypoint: ./kowl --config.filepath=/etc/kowl/config.yaml
+    ports:
+      - 8100:8080
+    networks:
+      - streaming_environment
+    volumes:
+      - ./docker/kowl/config.yaml:/etc/kowl/config.yaml
+
+
+networks:
+  streaming_environment:
+    name: streaming_environment
+    external: true

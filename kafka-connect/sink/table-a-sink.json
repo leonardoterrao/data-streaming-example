@@ -1,0 +1,22 @@
+{
+  "name": "table-a-sink",
+  "config": {
+    "tasks.max": 1,
+    "database": "streaming-example",
+    "collection": "ExampleCollection",
+    "connection.uri": "mongodb://mongoadmin:mongoadmin@mongo:27017/?w=1&journal=true&authSource=admin",
+    "topics": "example_server.public.table_a",
+    "change.data.capture.handler": "com.mongodb.kafka.connect.sink.cdc.debezium.rdbms.postgres.PostgresHandler",
+    "connector.class": "com.mongodb.kafka.connect.MongoSinkConnector",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": true,
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": true,
+    "errors.tolerance": "all",
+    "errors.log.enable": true,
+    "errors.log.include.messages": true,
+    "errors.deadletterqueue.topic.name": "example_server.public.table_a.dlt",
+    "errors.deadletterqueue.context.headers.enable": true,
+    "errors.deadletterqueue.topic.replication.factor": 1
+  }
+}
