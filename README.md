@@ -8,14 +8,15 @@ Configuring the environment
 
 * Starting the whole environment 
 ```console
-$ docker network create streaming_environment \ docker-compose up -d
+$ docker network create streaming_environment \
+    && docker-compose up -d
 ```
 
-* Access your PostgresSQL database started with docker-compose and check the scripts [here](scripts.sql) 
+* Access your PostgreSQL database started with docker-compose and check the scripts [here](scripts.sql) 
 
 * Register the Kafka Connectors according to the [kafka-connect/README.md](kafka-connect/README.md) file.
 
-* Do any change inside the table_a and table_b inside PostgresSQL database and check the MongoDB databse.
+* Do any change inside the table_a and table_b inside the PostgreSQL database and check the MongoDB database.
 
 ** It's Pendenting to do the upsert work to aggregate table_a and table_b in the same document in MongoDB.
 
