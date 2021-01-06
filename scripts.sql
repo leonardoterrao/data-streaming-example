@@ -33,9 +33,9 @@ DO $$
         SELECT random() * 10 + 1 into random_number;
         
         -- SHIFT THE id OF table_a, WHICH WILL MAKE table_a.id <> tablea_b.id
-		INSERT INTO table_a (field_a, field_b)
-		VALUES ('SHIFT', 'SHIFT');
-		TRUNCATE table_a CASCADE;
+        INSERT INTO table_a (field_a, field_b)
+	        VALUES ('SHIFT', 'SHIFT');
+        TRUNCATE table_a CASCADE;
 
         INSERT INTO table_a (field_a, field_b) VALUES ('TEST', random_number);
         INSERT INTO table_b (field_c, table_a_id) VALUES ('TABLE A ' || random_number, (select max(id) from table_a));
